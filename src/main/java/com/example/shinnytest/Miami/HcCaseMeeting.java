@@ -2,6 +2,7 @@ package com.example.shinnytest.Miami;
 
 import lombok.Data;
 
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
@@ -30,6 +31,8 @@ public class HcCaseMeeting {
     private String roomName;
     private String roomDesc;
     private String criticalLevel;
+
+    private Date startTimeRound;
 
     public HcCaseMeeting() {
     }
