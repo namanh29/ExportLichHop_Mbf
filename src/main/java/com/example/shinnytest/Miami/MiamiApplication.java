@@ -1,8 +1,10 @@
 package com.example.shinnytest.Miami;
 
+import org.apache.poi.hssf.util.HSSFColor;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.WorkbookUtil;
+import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFRichTextString;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -121,12 +123,12 @@ public class MiamiApplication {
 
 
             CellStyle styleRowData = workbook.createCellStyle();
-            styleRowHeader.setAlignment(HorizontalAlignment.CENTER);
-            styleRowHeader.setVerticalAlignment(VerticalAlignment.CENTER);
-            styleRowHeader.setBorderTop(BorderStyle.THIN);
-            styleRowHeader.setBorderBottom(BorderStyle.THIN);
-            styleRowHeader.setBorderLeft(BorderStyle.THIN);
-            styleRowHeader.setBorderRight(BorderStyle.THIN);
+            styleRowData.setAlignment(HorizontalAlignment.CENTER);
+            styleRowData.setVerticalAlignment(VerticalAlignment.CENTER);
+            styleRowData.setBorderTop(BorderStyle.THIN);
+            styleRowData.setBorderBottom(BorderStyle.THIN);
+            styleRowData.setBorderLeft(BorderStyle.THIN);
+            styleRowData.setBorderRight(BorderStyle.THIN);
 
             CellStyle styleColumA = workbook.createCellStyle();
             styleColumA.setAlignment(HorizontalAlignment.CENTER);
@@ -256,7 +258,7 @@ public class MiamiApplication {
                 // tạo 2 map chứa các cuộc họp buổi sáng và buổi chiều
                 Map<String, List<HcCaseMeeting>> hcCaseMeetingMorningList = new HashMap<>();
                 Map<String, List<HcCaseMeeting>> hcCaseMeetingAfternoonList = new HashMap<>();
-                for(Map.Entry<String, List<HcCaseMeeting>> meeting : hcCaseMeetingMap.entrySet()) {
+                for (Map.Entry<String, List<HcCaseMeeting>> meeting : hcCaseMeetingMap.entrySet()) {
                     LocalDateTime startTime = meeting.getValue().get(0).getStartTime().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
 
                     if (isMorningTime2(startTime)) {
@@ -265,52 +267,33 @@ public class MiamiApplication {
                 }
 
                 Row dataRow = sheet.createRow(rowIndex);
-                if(hcCaseMeetingMorningList.size() > 0 && hcCaseMeetingAfternoonList.size() > 0) {
-                    sheet.addMergedRegion(new CellRangeAddress(rowIndex,rowIndex + 1,0,0));
+                if (hcCaseMeetingMorningList.size() > 0 && hcCaseMeetingAfternoonList.size() > 0) {
+                    sheet.addMergedRegion(new CellRangeAddress(rowIndex, rowIndex + 1, 0, 0));
                 }
                 Cell cellA = dataRow.createCell(0);
                 cellA.setCellValue(meetingWeekdayFormatter);
                 cellA.setCellStyle(styleColumA);
 
-
                 // Phân loại các buổi họp vào cùng 1 list sáng hoặc chiều
-                if(hcCaseMeetingMorningList.size() > 0) {
+                if (hcCaseMeetingMorningList.size() > 0) {
                     Cell cellB = dataRow.createCell(1);
                     cellB.setCellStyle(styleColumBS);
-
                     cellB.setCellValue("Sáng");
-                    for(int j = 2; j < headerArr.length; j++) {
-                        if(dataRow.getCell(j) != null) {
-                            dataRow.getCell(j).setCellStyle(styleRowData);
-                        }
-                        else dataRow.createCell(j).setCellStyle(styleRowData);
-//                        dataRow.getCell(j).setCellValue("");
-                    }
                     fillDataExcel(hcCaseMeetingMorningList, phongHopToColMap, dataRow, styleRowData, styleCellCLD, styleCellKLD, styleCellQT, "Sáng", workbook, headerArr);
 
                     rowIndex++;
                 }
-                if(hcCaseMeetingAfternoonList.size() > 0) {
-
-                    if(sheet.getRow(rowIndex) == null ) {
+                if (hcCaseMeetingAfternoonList.size() > 0) {
+                    if (sheet.getRow(rowIndex) == null) {
                         dataRow = sheet.createRow(rowIndex);
                     }
                     Cell cellB = dataRow.createCell(1);
-                    cellB.setCellStyle(styleColumBS);
-
+                    cellB.setCellStyle(styleColumBC);
                     cellB.setCellValue("Chiều");
-                    for(int j = 2; j < headerArr.length; j++) {
-                        if(dataRow.getCell(j) != null) {
-                            dataRow.getCell(j).setCellStyle(styleRowData);
-                        }
-                        else dataRow.createCell(j).setCellStyle(styleRowData);
-//                        dataRow.getCell(j).setCellValue("");
-                    }
                     fillDataExcel(hcCaseMeetingAfternoonList, phongHopToColMap, dataRow, styleRowData, styleCellCLD, styleCellKLD, styleCellQT, "Chiều", workbook, headerArr);
 
                     rowIndex++;
                 }
-
             }
 
             // Ghi vào file
@@ -323,7 +306,14 @@ public class MiamiApplication {
         }
     }
 
-    private static void fillDataExcel(Map<String, List<HcCaseMeeting>> hcCaseMeetingMorningMap, Map<String, Integer> phongHopToColMap, Row dataRow, CellStyle styleColumA, CellStyle styleCellCLD, CellStyle styleCellKLD, CellStyle styleCellQT, String type, Workbook workbook, String[] headerArr) {
+    private static void fillDataExcel(Map<String, List<HcCaseMeeting>> hcCaseMeetingMorningMap, Map<String, Integer> phongHopToColMap, Row dataRow, CellStyle styleRowData, CellStyle styleCellCLD, CellStyle styleCellKLD, CellStyle styleCellQT, String type, Workbook workbook, String[] headerArr) {
+        for (int j = 2; j < headerArr.length; j++) {
+            Cell cell = dataRow.getCell(j);
+            if (cell == null) {
+                cell = dataRow.createCell(j);
+            }
+            cell.setCellStyle(styleRowData);
+        }
         for (Map.Entry<String, List<HcCaseMeeting>> hcCasePhongHopIdMeeting : hcCaseMeetingMorningMap.entrySet()) {
             String hcCasePhongHopId = hcCasePhongHopIdMeeting.getKey();
             List<HcCaseMeeting> meetings = hcCasePhongHopIdMeeting.getValue();
@@ -332,12 +322,6 @@ public class MiamiApplication {
             if (phongHopToColMap.containsKey(hcCasePhongHopId)) {
                 // Tạo một hàng mới cho mỗi ngày
                 dataRow.setHeight((short) -1);
-
-//                }
-//               for(int i = 2; i < headerArr.length; i++) {
-//                   dataRow.createCell(i).setCellStyle(styleColumA);
-//
-//               }
 
                 DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
 
@@ -372,20 +356,18 @@ public class MiamiApplication {
                 result.append("\n");
 
                 if (H.isTrue(services)) {
-                    result.append(services);
+                    result.append(services).append("\n");
                 }
-
                 // Logic xử lý cuộc họp và điền dữ liệu vào ô cell
 
                 Cell cells = dataRow.getCell(phongHopToColMap.get(hcCasePhongHopId));
 
                 XSSFRichTextString all;
                 XSSFRichTextString richString = new XSSFRichTextString(result.toString());
-                if(cells == null) {
+                if (cells == null) {
                     cells = dataRow.createCell(phongHopToColMap.get(hcCasePhongHopId)); // Bắt đầu từ cột thứ 2
                     all = new XSSFRichTextString();
-                }
-                else {
+                } else {
                     all = (XSSFRichTextString) cells.getRichStringCellValue();
                     result.insert(0, "\n");
                 }
@@ -398,30 +380,30 @@ public class MiamiApplication {
 
                 Font yellowFont = workbook.createFont();
                 yellowFont.setBold(true);
-                yellowFont.setColor(IndexedColors.DARK_YELLOW.getIndex());
+                yellowFont.setColor(IndexedColors.DARK_YELLOW.index);
                 // Thêm kiểm tra criticalLevel và setCellStyle tương ứng
                 HcCaseMeeting hcCaseMeeting = meetings.get(0);
 
-                    if (H.isTrue(hcCaseMeeting.getCriticalLevel())) {
-                        switch (hcCaseMeeting.getCriticalLevel().toUpperCase()) {
-                            case "COLANHDAO":
-                                cells.setCellStyle(styleCellCLD);
+                if (H.isTrue(hcCaseMeeting.getCriticalLevel())) {
+                    switch (hcCaseMeeting.getCriticalLevel().toUpperCase()) {
+                        case "COLANHDAO":
+                            cells.setCellStyle(styleCellCLD);
 
-                                richString.applyFont(yellowFont);
-                                all.append(result.toString(), (XSSFFont) yellowFont);
-                                break;
-                            case "KHONGLANHDAO":
-                                cells.setCellStyle(styleCellKLD);
-                                richString.applyFont(blueFont);
-                                all.append(result.toString(), (XSSFFont) blueFont);
-                                break;
-                            case "QUANTRONG":
-                                cells.setCellStyle(styleCellQT);
-                                richString.applyFont(redFont);
-                                all.append(result.toString(), (XSSFFont) redFont);
-                                break;
-                        }
+                            richString.applyFont(yellowFont);
+                            all.append(result.toString(), (XSSFFont) yellowFont);
+                            break;
+                        case "KHONGLANHDAO":
+                            cells.setCellStyle(styleCellKLD);
+                            richString.applyFont(blueFont);
+                            all.append(result.toString(), (XSSFFont) blueFont);
+                            break;
+                        case "QUANTRONG":
+                            cells.setCellStyle(styleCellQT);
+                            richString.applyFont(redFont);
+                            all.append(result.toString(), (XSSFFont) redFont);
+                            break;
                     }
+                }
                 cells.setCellValue(all);
             }
         }
@@ -438,7 +420,7 @@ public class MiamiApplication {
         return rs;
     }
 
-    public static String setFormattedWeekday (LocalDateTime localDateTime) {
+    public static String setFormattedWeekday(LocalDateTime localDateTime) {
         String dateFormatted = localDateTime.format(DateTimeFormatter.ofPattern("dd/MM"));
         int weekdayInt = localDateTime.getDayOfWeek().getValue();
         String weekdayStr = 1 == weekdayInt ? "Chủ Nhật" : ("Thứ " + weekdayInt);
@@ -449,7 +431,7 @@ public class MiamiApplication {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(date);
         int hour = calendar.get(Calendar.HOUR_OF_DAY);
-        if (hour >= 0  && hour < 12) return true;
+        if (hour >= 0 && hour < 12) return true;
         else return false;
     }
 
