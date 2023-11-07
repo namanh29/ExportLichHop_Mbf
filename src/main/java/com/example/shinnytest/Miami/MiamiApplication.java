@@ -3,6 +3,8 @@ package com.example.shinnytest.Miami;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.WorkbookUtil;
+import org.apache.poi.xssf.usermodel.XSSFFont;
+import org.apache.poi.xssf.usermodel.XSSFRichTextString;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.FileInputStream;
@@ -10,7 +12,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -74,7 +75,7 @@ public class MiamiApplication {
             excelData.setRoomId(row.getCell(17).getStringCellValue());
             excelData.setServices(H.isTrue(row.getCell(18)) ? row.getCell(18).getStringCellValue() : "");
             excelData.setRoomName(row.getCell(19).getStringCellValue());
-            excelData.setRoomDesc(row.getCell(20).getStringCellValue());
+//            excelData.setRoomDesc(row.getCell(20).getStringCellValue());
             excelData.setCriticalLevel(row.getCell(21).getStringCellValue());
 
             Calendar cal = Calendar.getInstance(); // locale-specific
@@ -162,8 +163,8 @@ public class MiamiApplication {
             styleCellKLD.setAlignment(HorizontalAlignment.CENTER);
             styleCellKLD.setVerticalAlignment(VerticalAlignment.CENTER);
             styleCellKLD.setWrapText(true);
-            styleCellKLD.setFillForegroundColor(IndexedColors.AQUA.getIndex());
-            styleCellKLD.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+//            styleCellKLD.setFillForegroundColor(IndexedColors.AQUA.getIndex());
+//            styleCellKLD.setFillPattern(FillPatternType.SOLID_FOREGROUND);
             styleCellKLD.setBorderTop(BorderStyle.THIN);
             styleCellKLD.setBorderBottom(BorderStyle.THIN);
             styleCellKLD.setBorderLeft(BorderStyle.THIN);
@@ -173,8 +174,8 @@ public class MiamiApplication {
             styleCellCLD.setAlignment(HorizontalAlignment.CENTER);
             styleCellCLD.setVerticalAlignment(VerticalAlignment.CENTER);
             styleCellCLD.setWrapText(true);
-            styleCellCLD.setFillForegroundColor(IndexedColors.YELLOW.getIndex());
-            styleCellCLD.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+//            styleCellCLD.setFillForegroundColor(IndexedColors.YELLOW.getIndex());
+//            styleCellCLD.setFillPattern(FillPatternType.SOLID_FOREGROUND);
             styleCellCLD.setBorderTop(BorderStyle.THIN);
             styleCellCLD.setBorderBottom(BorderStyle.THIN);
             styleCellCLD.setBorderLeft(BorderStyle.THIN);
@@ -184,8 +185,8 @@ public class MiamiApplication {
             styleCellQT.setAlignment(HorizontalAlignment.CENTER);
             styleCellQT.setVerticalAlignment(VerticalAlignment.CENTER);
             styleCellQT.setWrapText(true);
-            styleCellQT.setFillForegroundColor(IndexedColors.RED.getIndex());
-            styleCellQT.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+//            styleCellQT.setFillForegroundColor(IndexedColors.RED.getIndex());
+//            styleCellQT.setFillPattern(FillPatternType.SOLID_FOREGROUND);
             styleCellQT.setBorderTop(BorderStyle.THIN);
             styleCellQT.setBorderBottom(BorderStyle.THIN);
             styleCellQT.setBorderLeft(BorderStyle.THIN);
@@ -193,12 +194,12 @@ public class MiamiApplication {
 
             // Danh sách tên các phòng họp lấy từ (HC_CASE_PHONGHOP_REPORT_VIEW)
             if (!H.isTrue(hcMasterCaseExcelReportResultList)) return;
-            dayMeetingMap = hcMasterCaseExcelReportResultList.stream()
-                    .collect(Collectors.groupingBy(
-                            HcCaseMeeting::getStartTime,
-                            LinkedHashMap::new,
-                            Collectors.groupingBy(HcCaseMeeting::getHcCasePhonghopId, Collectors.toList())
-                    ));
+//            dayMeetingMap = hcMasterCaseExcelReportResultList.stream()
+//                    .collect(Collectors.groupingBy(
+//                            HcCaseMeeting::getStartTime,
+//                            LinkedHashMap::new,
+//                            Collectors.groupingBy(HcCaseMeeting::getHcCasePhonghopId, Collectors.toList())
+//                    ));
             Map<Date, Map<String, List<HcCaseMeeting>>> dayMeetingMap2 = hcMasterCaseExcelReportResultList.stream()
                     .collect(Collectors.groupingBy(
                             HcCaseMeeting::getStartTimeRound,
@@ -245,32 +246,17 @@ public class MiamiApplication {
                 }
             }
 
-            // Tạo format DateTime và chuyển từ ngày đến ngày thành dạng LocalDate
             int rowIndex = 1; // hàng thứ 2 sau hàng tên tiêu đề
-            LocalDateTime fromLocalDateTimeInput = Instant.ofEpochMilli(fromTimeInput)
-                    .atZone(ZoneId.systemDefault())
-                    .toLocalDateTime();
-            LocalDateTime endLocalDateTimeInput = Instant.ofEpochMilli(endTimeInput)
-                    .atZone(ZoneId.systemDefault())
-                    .toLocalDateTime();
 
-
-            int previousDay = 0;
             for (Map.Entry<Date, Map<String, List<HcCaseMeeting>>> dayMeeting : dayMeetingMap2.entrySet()) {
                 LocalDateTime startMeetingTime = dayMeeting.getKey().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
                 Map<String, List<HcCaseMeeting>> hcCaseMeetingMap = dayMeeting.getValue();
                 String meetingWeekdayFormatter = setFormattedWeekday(startMeetingTime);
 
-                int isDay = startMeetingTime.getDayOfMonth();
-
-                int rowIndexForDay = rowIndex; // Sử dụng để theo dõi hàng cho mỗi ngày
-                int rowIndexForMeeting = rowIndexForDay; // Sử dụng để theo dõi hàng cho mỗi cuộc họp trong 1 ngày
-
-
+                // tạo 2 map chứa các cuộc họp buổi sáng và buổi chiều
                 Map<String, List<HcCaseMeeting>> hcCaseMeetingMorningList = new HashMap<>();
                 Map<String, List<HcCaseMeeting>> hcCaseMeetingAfternoonList = new HashMap<>();
                 for(Map.Entry<String, List<HcCaseMeeting>> meeting : hcCaseMeetingMap.entrySet()) {
-                    String idCuocHop = meeting.getKey();
                     LocalDateTime startTime = meeting.getValue().get(0).getStartTime().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
 
                     if (isMorningTime2(startTime)) {
@@ -285,98 +271,47 @@ public class MiamiApplication {
                 Cell cellA = dataRow.createCell(0);
                 cellA.setCellValue(meetingWeekdayFormatter);
                 cellA.setCellStyle(styleColumA);
+
+
                 // Phân loại các buổi họp vào cùng 1 list sáng hoặc chiều
                 if(hcCaseMeetingMorningList.size() > 0) {
+                    Cell cellB = dataRow.createCell(1);
+                    cellB.setCellStyle(styleColumBS);
 
-                    fillDataExcel(hcCaseMeetingMorningList, phongHopToColMap, dataRow, rowIndexForMeeting,
-                            rowIndexForDay, meetingWeekdayFormatter, styleColumA, startMeetingTime, styleColumBS,
-                            styleColumBC, styleCellCLD, styleCellKLD, styleCellQT, "Sáng");
+                    cellB.setCellValue("Sáng");
+                    for(int j = 2; j < headerArr.length; j++) {
+                        if(dataRow.getCell(j) != null) {
+                            dataRow.getCell(j).setCellStyle(styleRowData);
+                        }
+                        else dataRow.createCell(j).setCellStyle(styleRowData);
+//                        dataRow.getCell(j).setCellValue("");
+                    }
+                    fillDataExcel(hcCaseMeetingMorningList, phongHopToColMap, dataRow, styleRowData, styleCellCLD, styleCellKLD, styleCellQT, "Sáng", workbook, headerArr);
+
                     rowIndex++;
                 }
                 if(hcCaseMeetingAfternoonList.size() > 0) {
+
                     if(sheet.getRow(rowIndex) == null ) {
                         dataRow = sheet.createRow(rowIndex);
                     }
+                    Cell cellB = dataRow.createCell(1);
+                    cellB.setCellStyle(styleColumBS);
 
-                    fillDataExcel(hcCaseMeetingAfternoonList, phongHopToColMap, dataRow, rowIndexForMeeting,
-                            rowIndexForDay, meetingWeekdayFormatter, styleColumA, startMeetingTime, styleColumBS,
-                            styleColumBC, styleCellCLD, styleCellKLD, styleCellQT, "Chiều");
+                    cellB.setCellValue("Chiều");
+                    for(int j = 2; j < headerArr.length; j++) {
+                        if(dataRow.getCell(j) != null) {
+                            dataRow.getCell(j).setCellStyle(styleRowData);
+                        }
+                        else dataRow.createCell(j).setCellStyle(styleRowData);
+//                        dataRow.getCell(j).setCellValue("");
+                    }
+                    fillDataExcel(hcCaseMeetingAfternoonList, phongHopToColMap, dataRow, styleRowData, styleCellCLD, styleCellKLD, styleCellQT, "Chiều", workbook, headerArr);
+
                     rowIndex++;
                 }
 
-//                for (Map<String, List<HcCaseMeeting>> hcCaseMeetingMorningMap : hcCaseMeetingMorningList) {
-
-//                }
-
-//                for (Map<String, List<HcCaseMeeting>> hcCaseMeetingAfternoonMap : hcCaseMeetingAfternoonList) {
-
-//                }
-
-//                    rowIndex = rowIndexForMeeting; // Cập nhật rowIndex cho ngày tiếp theo
-//                if (previousDay < isDay) {
-//                    previousDay = isDay;
-//                    rowIndex++; // Cập nhật rowIndex cho ngày tiếp theo
-//                }
-
             }
-
-//            Map<String, CellRangeAddress> columnDataRanges = new HashMap<>();
-
-//             Quá trình siêu merge các ô excel 16-10-2023
-//            int rowMergeStartOfColA = 1;
-//            int rowMergeEndOfColA = 1;
-//            Map<String, CellRangeAddress> mergeColumnMapA = new HashMap<>();
-//            for (int i = 1; i <= sheet.getLastRowNum(); i++) {
-//                Row rowA = sheet.getRow(i);
-//                String cellValueOfColA = getCellValueAsString(rowA.getCell(0));
-//
-//                // Merge các ô giống nhau trong cột đầu tiên
-//                if (!cellValueOfColA.isEmpty()) {
-//                    if (mergeColumnMapA.containsKey(cellValueOfColA)) {
-//                        rowMergeEndOfColA++;
-//                    } else {
-//                        rowMergeStartOfColA = rowMergeEndOfColA = rowA.getRowNum();
-//                    }
-//                    mergeColumnMapA.put(cellValueOfColA, new CellRangeAddress(rowMergeStartOfColA, rowMergeEndOfColA,
-//                            0, 0));
-//                }
-//            }
-
-            // phần merge cột thứ 2 buổi họp đang thực hiện
-            /*for (Map.Entry<String, CellRangeAddress> s : mergeColumnMapA.entrySet()) {
-                CellRangeAddress cellRangeAddressB = s.getValue().copy();
-                cellRangeAddressB.setFirstColumn(1);
-                cellRangeAddressB.setLastColumn(1);
-
-                int startRowMergeOfColB = 1;
-                int endRowMergeOfColB = 1;
-                int rowStartB = cellRangeAddressB.getFirstRow();
-                int rowEndB = cellRangeAddressB.getLastRow();
-                Map<String, CellRangeAddress> mergeColumnMapB = new HashMap<>();;
-                for (int i = rowStartB; i <= rowEndB; i++) {
-
-                    Row rowB = sheet.getRow(i);
-                    String cellValueOfColB = getCellValueAsString(rowB.getCell(1));
-
-                    // Merge các ô giống nhau trong cột thứ 2
-                    if (H.isTrue(cellValueOfColB)) {
-                        if (mergeColumnMapB.containsKey(cellValueOfColB)) {
-                            endRowMergeOfColB = rowB.getRowNum();
-                        } else {
-                            startRowMergeOfColB = endRowMergeOfColB = rowStartB;
-                        }
-                        mergeColumnMapB.put(cellValueOfColB, new CellRangeAddress(startRowMergeOfColB, endRowMergeOfColB,
-                                1, 1));
-                    }
-
-                }
-                // Merge các ô giống nhau trong cột thứ hai
-                mergeCellsInColumnB(sheet, mergeColumnMapB);
-            }*/
-
-             // Merge các ô giống nhau trong cột đầu tiên
-//            mergeCellsInColumnA(sheet, mergeColumnMapA);
-
 
             // Ghi vào file
             FileOutputStream outputStream = new FileOutputStream("LichDatPhongHop2.xlsx");
@@ -388,7 +323,7 @@ public class MiamiApplication {
         }
     }
 
-    private static void fillDataExcel(Map<String, List<HcCaseMeeting>> hcCaseMeetingMorningMap, Map<String, Integer> phongHopToColMap, Row dataRow, int rowIndexForMeeting, int rowIndexForDay, String meetingWeekdayFormatter, CellStyle styleColumA, LocalDateTime startMeetingTime, CellStyle styleColumBS, CellStyle styleColumBC, CellStyle styleCellCLD, CellStyle styleCellKLD, CellStyle styleCellQT, String type) {
+    private static void fillDataExcel(Map<String, List<HcCaseMeeting>> hcCaseMeetingMorningMap, Map<String, Integer> phongHopToColMap, Row dataRow, CellStyle styleColumA, CellStyle styleCellCLD, CellStyle styleCellKLD, CellStyle styleCellQT, String type, Workbook workbook, String[] headerArr) {
         for (Map.Entry<String, List<HcCaseMeeting>> hcCasePhongHopIdMeeting : hcCaseMeetingMorningMap.entrySet()) {
             String hcCasePhongHopId = hcCasePhongHopIdMeeting.getKey();
             List<HcCaseMeeting> meetings = hcCasePhongHopIdMeeting.getValue();
@@ -398,26 +333,12 @@ public class MiamiApplication {
                 // Tạo một hàng mới cho mỗi ngày
                 dataRow.setHeight((short) -1);
 
-                // Các ô cho thứ và ngày (chỉ tạo 1 lần cho mỗi ngày)
-//                if (rowIndexForMeeting == rowIndexForDay) {
-//                    Cell cellA = dataRow.createCell(0);
-//                    cellA.setCellValue(meetingWeekdayFormatter);
-//                    cellA.setCellStyle(styleColumA);
-
-                    Cell cellB = dataRow.createCell(1);
-                        if(type.equals("Sáng")) {
-                            cellB.setCellValue("Sáng");
-                            cellB.setCellStyle(styleColumBS);
-                        }
-                        else {
-                            cellB.setCellValue("Chiều");
-                            cellB.setCellStyle(styleColumBC);
-                        }
-
 //                }
+//               for(int i = 2; i < headerArr.length; i++) {
+//                   dataRow.createCell(i).setCellStyle(styleColumA);
+//
+//               }
 
-                // Logic xử lý cuộc họp và điền dữ liệu vào ô cell
-                Cell cells = dataRow.createCell(phongHopToColMap.get(hcCasePhongHopId)); // Bắt đầu từ cột thứ 2
                 DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
 
                 String startTime = null;
@@ -447,35 +368,61 @@ public class MiamiApplication {
                         result.append(hcCaseMeeting.getMeetingMemberFullname()).append(", ");
                     }
                 }
+                result.delete(result.length() - 2, result.length());
                 result.append("\n");
 
                 if (H.isTrue(services)) {
                     result.append(services);
                 }
 
-                if (result.length() > 0 && result.charAt(result.length() - 2) == ',') {
-                    result.deleteCharAt(result.length() - 2);
+                // Logic xử lý cuộc họp và điền dữ liệu vào ô cell
+
+                Cell cells = dataRow.getCell(phongHopToColMap.get(hcCasePhongHopId));
+
+                XSSFRichTextString all;
+                XSSFRichTextString richString = new XSSFRichTextString(result.toString());
+                if(cells == null) {
+                    cells = dataRow.createCell(phongHopToColMap.get(hcCasePhongHopId)); // Bắt đầu từ cột thứ 2
+                    all = new XSSFRichTextString();
                 }
+                else {
+                    all = (XSSFRichTextString) cells.getRichStringCellValue();
+                    result.insert(0, "\n");
+                }
+                Font blueFont = workbook.createFont();
+                blueFont.setBold(true);
+                blueFont.setColor(IndexedColors.BLUE.getIndex());
 
-                cells.setCellValue(result.toString());
+                Font redFont = workbook.createFont();
+                redFont.setColor(IndexedColors.RED.getIndex());
 
+                Font yellowFont = workbook.createFont();
+                yellowFont.setBold(true);
+                yellowFont.setColor(IndexedColors.DARK_YELLOW.getIndex());
                 // Thêm kiểm tra criticalLevel và setCellStyle tương ứng
-                for (HcCaseMeeting hcCaseMeeting : meetings) {
+                HcCaseMeeting hcCaseMeeting = meetings.get(0);
+
                     if (H.isTrue(hcCaseMeeting.getCriticalLevel())) {
                         switch (hcCaseMeeting.getCriticalLevel().toUpperCase()) {
                             case "COLANHDAO":
                                 cells.setCellStyle(styleCellCLD);
+
+                                richString.applyFont(yellowFont);
+                                all.append(result.toString(), (XSSFFont) yellowFont);
                                 break;
                             case "KHONGLANHDAO":
                                 cells.setCellStyle(styleCellKLD);
+                                richString.applyFont(blueFont);
+                                all.append(result.toString(), (XSSFFont) blueFont);
                                 break;
                             case "QUANTRONG":
                                 cells.setCellStyle(styleCellQT);
+                                richString.applyFont(redFont);
+                                all.append(result.toString(), (XSSFFont) redFont);
                                 break;
                         }
                     }
-                }
-//                            rowIndexForMeeting++;
+                cells.setCellValue(all);
             }
         }
     }
